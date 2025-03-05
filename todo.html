@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart ToDo Scheduler</title>
+    <link rel="icon" type="image/x-icon" href="checked.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #007bff;
+            --background-color: #f4f4f4;
+            --white: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--secondary-color);
+        }
+
+        .navbar {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+        }
+
+        .navbar .links a {
+            color: var(--white);
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .navbar .links a:hover {
+            color: var(--primary-color);
+        }
+
+        .navbar .menu {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        #wrapper {
+            max-width: 900px;
+            margin: 30px auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow);
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        #wrapper h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        #taskForm {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #taskForm input, #taskForm select, #taskForm button {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            transition: 0.3s ease;
+        }
+
+        #taskForm input:focus, #taskForm select:focus {
+            border-color: var(--primary-color);
+        }
+
+        #taskForm button {
+            background-color: var(--primary-color);
+            color: var(--white);
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s ease;
+        }
+
+        #taskForm button:hover {
+            background-color: #0056b3;
+        }
+
+        #taskList div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px var(--shadow);
+            margin-bottom: 10px;
+            background: var(--white);
+        }
+
+        .remove-task {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .remove-task:hover {
+            background-color: #c82333;
+        }
+
+        .foot {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            box-shadow: 0 -2px 10px var(--shadow);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .navbar .links {
+                display: none;
+                flex-direction: column;
+                background: var(--secondary-color);
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                box-shadow: 0 2px 10px var(--shadow);
+                z-index: 100;
+            }
+
+            .navbar .links a {
+                padding: 15px;
+                text-align: center;
+                display: block;
+            }
+
+            .navbar .menu {
+                display: block;
+            }
+
+            .navbar .links.show {
+                display: flex;
+            }
+
+            #wrapper {
+                width: 95%;
+                padding: 20px;
+            }
+
+            #taskForm {
+                grid-template-columns: 1fr;
+            }
+
+            #taskForm input, #taskForm select, #taskForm button {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+            }
+
+            #taskList div {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .remove-task {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <h1>Smart ToDo Scheduler</h1>
+    <div class="links">
+        <a href="#">Home</a>
+        <a href="about.html">About</a>
+    </div>
+    <div class="menu" onclick="toggleNav()">
+        <i class="fa-solid fa-bars"></i>
+    </div>
+</nav>
+
+<div id="wrapper">
+    <h1>Smart ToDo Scheduler</h1>
+    <form id="taskForm">
+        <input type="text" id="taskName" placeholder="Task Name" required>
+        <input type="date" id="taskDeadline" required>
+        <select id="taskPriority" required>
+            <option value="low">Low Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="high">High Priority</option>
+        </select>
+        <input type="text" id="taskDependencies" placeholder="Dependencies (comma-separated)">
+        <button type="submit">Add Task</button>
+    </form>
+    <div id="taskList"></div>
+</div>
+
+<div class="foot">
+    <p>© 2025 Smart ToDo Scheduler - Optimize Your Workflow!</p>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+      const taskForm = document.getElementById('taskForm');
+      const taskList = document.getElementById('taskList');
+      const navLinks = document.querySelector('.navbar .links');
+
+      let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+      renderTasks();
+
+      taskForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+
+          const taskName = document.getElementById('taskName').value;
+          const taskDeadline = document.getElementById('taskDeadline').value;
+          const taskPriority = document.getElementById('taskPriority').value;
+          const taskDependencies = document.getElementById('taskDependencies').value.split(',').map(dep => dep.trim()).filter(dep => dep !== "");
+
+          const task = {
+              name: taskName,
+              deadline: taskDeadline,
+              priority: taskPriority,
+              dependencies: taskDependencies
+          };
+
+          tasks.push(task);
+          localStorage.setItem('tasks', JSON.stringify(tasks));
+          renderTasks();
+          taskForm.reset();
+      });
+
+      function renderTasks() {
+          taskList.innerHTML = '';
+          tasks.forEach((task, index) => {
+              const taskItem = document.createElement('div');
+              taskItem.innerHTML = `
+                  <p><strong>${task.name}</strong></p>
+                  <p>Deadline: ${task.deadline}</p>
+                  <p>Priority: ${task.priority}</p>
+                  <p>Dependencies: ${task.dependencies.join(', ') || 'None'}</p>
+                  <button class="remove-task" data-index="${index}">Remove</button>
+              `;
+              taskList.appendChild(taskItem);
+          });
+
+          document.querySelectorAll('.remove-task').forEach(button => {
+              button.addEventListener('click', function() {
+                  const indexToRemove = parseInt(this.getAttribute('data-index'));
+                  tasks.splice(indexToRemove, 1);
+                  localStorage.setItem('tasks', JSON.stringify(tasks));
+                  renderTasks();
+              });
+          });
+      }
+
+      window.toggleNav = function() {
+          navLinks.classList.toggle('show');
+      };
+  });
+</script>
+
+</body>
+</html>
