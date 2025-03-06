@@ -36,10 +36,6 @@
             z-index: 1000;
         }
 
-        .navbar h1 {
-            font-size: 24px;
-        }
-
         .navbar .links a {
             color: var(--white);
             text-decoration: none;
@@ -76,7 +72,7 @@
 
         #taskForm {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -105,7 +101,13 @@
             background-color: #0056b3;
         }
 
-        #taskList div {
+        #taskList {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-item {
             display: flex;
             flex-direction: column;
             gap: 5px;
@@ -113,8 +115,19 @@
             border-bottom: 1px solid #eee;
             border-radius: 8px;
             box-shadow: 0 2px 5px var(--shadow);
-            margin-bottom: 10px;
             background: var(--white);
+        }
+
+        .task-item.high-priority {
+            border-left: 5px solid #dc3545;
+        }
+
+        .task-item.medium-priority {
+            border-left: 5px solid #ffc107;
+        }
+
+        .task-item.low-priority {
+            border-left: 5px solid #28a745;
         }
 
         .remove-task {
@@ -174,27 +187,76 @@
 
             #wrapper {
                 width: 95%;
-                padding: 20px;
             }
+        }
 
-            #taskForm {
-                grid-template-columns: 1fr;
-            }
+        /* Custom Calendar CSS */
+        .calendar-container {
+            position: relative;
+        }
 
-            #taskForm input, #taskForm select, #taskForm button {
-                width: 100%;
-                padding: 12px;
-                font-size: 16px;
-            }
+        .calendar-input {
+            width: 80%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            cursor: pointer;
+        }
 
-            #taskList div {
-                padding: 10px;
-                font-size: 14px;
-            }
+        .calendar-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--white);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--shadow);
+            z-index: 1000;
+            padding: 10px;
+        }
 
-            .remove-task {
-                font-size: 14px;
-            }
+        .calendar-dropdown.show {
+            display: block;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .calendar-header button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-grid div {
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .calendar-grid div:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .calendar-grid .disabled {
+            color: #ccc;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -214,7 +276,18 @@
     <h1>Smart ToDo Scheduler</h1>
     <form id="taskForm">
         <input type="text" id="taskName" placeholder="Task Name" required>
-        <input type="date" id="taskDeadline" required>
+        <!-- Custom Calendar Input -->
+        <div class="calendar-container">
+            <input type="text" id="taskDeadline" class="calendar-input" placeholder="Select Deadline" readonly>
+            <div class="calendar-dropdown" id="calendarDropdown">
+                <div class="calendar-header">
+                    <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                    <span id="currentMonthYear">Month Year</span>
+                    <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+        </div>
         <select id="taskPriority" required>
             <option value="low">Low Priority</option>
             <option value="medium">Medium Priority</option>
@@ -236,6 +309,65 @@
       const taskList = document.getElementById('taskList');
       const navLinks = document.querySelector('.navbar .links');
 
+      // Calendar Logic
+      const calendarInput = document.getElementById('taskDeadline');
+      const calendarDropdown = document.getElementById('calendarDropdown');
+      const currentMonthYear = document.getElementById('currentMonthYear');
+      const calendarGrid = document.getElementById('calendarGrid');
+      const prevMonthButton = document.getElementById('prevMonth');
+      const nextMonthButton = document.getElementById('nextMonth');
+
+      let currentDate = new Date();
+      let selectedDate = null;
+
+      const renderCalendar = (date) => {
+          const year = date.getFullYear();
+          const month = date.getMonth();
+          const firstDay = new Date(year, month, 1).getDay();
+          const lastDate = new Date(year, month + 1, 0).getDate();
+
+          currentMonthYear.textContent = ${date.toLocaleString('default', { month: 'long' })} ${year};
+
+          let calendarHTML = '';
+          // Fill in previous month's days
+          for (let i = 0; i < firstDay; i++) {
+              calendarHTML += <div class="disabled"></div>;
+          }
+          // Fill in current month's days
+          for (let i = 1; i <= lastDate; i++) {
+              const isSelected = selectedDate && selectedDate.toDateString() === new Date(year, month, i).toDateString();
+              calendarHTML += <div class="${isSelected ? 'selected' : ''}">${i}</div>;
+          }
+          calendarGrid.innerHTML = calendarHTML;
+
+          // Add event listeners to days
+          calendarGrid.querySelectorAll('div:not(.disabled)').forEach(day => {
+              day.addEventListener('click', () => {
+                  selectedDate = new Date(year, month, parseInt(day.textContent));
+                  calendarInput.value = selectedDate.toISOString().split('T')[0];
+                  calendarDropdown.classList.remove('show');
+              });
+          });
+      };
+
+      calendarInput.addEventListener('click', () => {
+          calendarDropdown.classList.toggle('show');
+      });
+
+      prevMonthButton.addEventListener('click', () => {
+          currentDate.setMonth(currentDate.getMonth() - 1);
+          renderCalendar(currentDate);
+      });
+
+      nextMonthButton.addEventListener('click', () => {
+          currentDate.setMonth(currentDate.getMonth() + 1);
+          renderCalendar(currentDate);
+      });
+
+      // Initial render
+      renderCalendar(currentDate);
+
+      // Task Form Logic
       let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
       renderTasks();
 
@@ -262,8 +394,15 @@
 
       function renderTasks() {
           taskList.innerHTML = '';
-          tasks.forEach((task, index) => {
+          // Sort tasks by priority: High > Medium > Low
+          const sortedTasks = tasks.sort((a, b) => {
+              const priorityOrder = { high: 3, medium: 2, low: 1 };
+              return priorityOrder[b.priority] - priorityOrder[a.priority];
+          });
+
+          sortedTasks.forEach((task, index) => {
               const taskItem = document.createElement('div');
+              taskItem.classList.add('task-item', ${task.priority}-priority);
               taskItem.innerHTML = `
                   <p><strong>${task.name}</strong></p>
                   <p>Deadline: ${task.deadline}</p>
@@ -289,6 +428,5 @@
       };
   });
 </script>
-
 </body>
 </html>
